@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -17,6 +18,11 @@ import (
 	"github.com/spf13/afero"
 )
 
+// crcRegex is a regex to find the CRC32-Hash within a string.
+var crcRegex = regexp.MustCompile(`\[([A-Fa-f0-9]{8})]`)
+
+// check reads the CRC32-Hash from all files in the given dir (excluding sub-folders) and validates the hashes against
+// the file contents. It optionally updates the hashes in case of a mismatch.
 func check(dir string, update bool) error {
 	fs := afero.NewOsFs()
 	files, err := afero.ReadDir(fs, dir)
@@ -42,6 +48,8 @@ func check(dir string, update bool) error {
 	return nil
 }
 
+// checkCRC reads the CRC32-Hash from a given file and compares it against the hash of the file content. The result is
+// printed to os.Stdout. If update is true, the file will be renamed to include the new hash in case of a mismatch.
 func checkCRC(fs afero.Fs, dir string, file os.FileInfo, update bool) error {
 	crcHashBytes, err := extractHash(file.Name())
 	if err != nil {
@@ -69,6 +77,9 @@ func checkCRC(fs afero.Fs, dir string, file os.FileInfo, update bool) error {
 	return nil
 }
 
+// extractHash extracts the CRC32-Hash from the given file name (or any string) in the format [XXXXXXXX], where X is
+// a hex character so any of 0-9, a-f or A-F. In case string doesn't contain a hash, a nil byte slice is returned
+// which NOT an error.
 func extractHash(name string) ([]byte, error) {
 	regexMatch := crcRegex.FindStringSubmatch(name)
 	if len(regexMatch) != 2 {
@@ -77,6 +88,7 @@ func extractHash(name string) ([]byte, error) {
 	return hex.DecodeString(regexMatch[1])
 }
 
+// calculateHash reads the content of the given file from the file system and computes a new CRC32-Hash.
 func calculateHash(fs afero.Fs, name string) ([]byte, error) {
 	f, err := fs.Open(name)
 	if err != nil {
@@ -91,6 +103,8 @@ func calculateHash(fs afero.Fs, name string) ([]byte, error) {
 	return hasher.Sum(nil), nil
 }
 
+// renameFileHash replaces the hash of a file with the new hash by replacing the hash value in the file name,
+// effectively renaming the file.
 func renameFileHash(fs afero.Fs, dir string, file os.FileInfo, crcHashBytes, crcCalcBytes []byte) error {
 	crcHash := strings.ToUpper(hex.EncodeToString(crcHashBytes))
 	crcCalc := strings.ToUpper(hex.EncodeToString(crcCalcBytes))

@@ -3,12 +3,9 @@ package main
 import (
 	"log"
 	"os"
-	"regexp"
 
 	"github.com/urfave/cli"
 )
-
-var crcRegex = regexp.MustCompile(`\[([A-Fa-f0-9]{8})]`)
 
 func main() {
 	wd, err := os.Getwd()
