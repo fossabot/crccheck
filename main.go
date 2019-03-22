@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/spf13/afero"
 	"github.com/urfave/cli"
 )
 
@@ -33,7 +34,7 @@ func main() {
 		},
 	}
 	app.Action = func(c *cli.Context) error {
-		return check(c.String("dir"), c.Bool("update"))
+		return check(afero.NewOsFs(), c.String("dir"), c.Bool("update"))
 	}
 
 	if err := app.Run(os.Args); err != nil {

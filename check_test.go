@@ -10,6 +10,46 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_check(t *testing.T) {
+	require := require.New(t)
+	fs := afero.NewMemMapFs()
+	require.NoError(fs.Mkdir("/test", 0644))
+	require.NoError(afero.WriteFile(fs, "/test/[8AB2DCE2].txt", []byte("test1"), 0644))
+	require.NoError(afero.WriteFile(fs, "/test/[00000000].txt", []byte("test2"), 0644))
+	err := check(fs, "/test", false)
+	assert.NoError(t, err)
+}
+
+func Test_checkCRC(t *testing.T) {
+	type args struct {
+		dir    string
+		file   string
+		update bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"Example", args{"", "test[8AB2DCE2].txt", false}, false},
+		{"Update", args{"", "test[00000000].txt", true}, false},
+	}
+	for _, tt := range tests {
+		fs := afero.NewMemMapFs()
+		err := afero.WriteFile(fs, "test[8AB2DCE2].txt", []byte("test1"), 0644)
+		require.NoError(t, err)
+		err = afero.WriteFile(fs, "test[00000000].txt", []byte("test2"), 0644)
+		require.NoError(t, err)
+		t.Run(tt.name, func(t *testing.T) {
+			fi, err := fs.Stat(tt.args.file)
+			assert.NoError(t, err)
+			if err := checkCRC(fs, tt.args.dir, fi, tt.args.update); (err != nil) != tt.wantErr {
+				t.Errorf("checkCRC() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func Test_extractHash(t *testing.T) {
 	type args struct {
 		name string

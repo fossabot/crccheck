@@ -23,8 +23,7 @@ var crcRegex = regexp.MustCompile(`\[([A-Fa-f0-9]{8})]`)
 
 // check reads the CRC32-Hash from all files in the given dir (excluding sub-folders) and validates the hashes against
 // the file contents. It optionally updates the hashes in case of a mismatch.
-func check(dir string, update bool) error {
-	fs := afero.NewOsFs()
+func check(fs afero.Fs, dir string, update bool) error {
 	files, err := afero.ReadDir(fs, dir)
 	if err != nil {
 		return err
