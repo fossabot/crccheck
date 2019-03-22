@@ -15,6 +15,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/ivpusic/grpool"
+	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 )
 
@@ -26,7 +27,7 @@ var crcRegex = regexp.MustCompile(`\[([A-Fa-f0-9]{8})]`)
 func check(fs afero.Fs, dir string, update bool) error {
 	files, err := afero.ReadDir(fs, dir)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "could not list files of folder %s", dir)
 	}
 
 	pool := grpool.NewPool(runtime.GOMAXPROCS(0), 100)
@@ -38,7 +39,7 @@ func check(fs afero.Fs, dir string, update bool) error {
 		pool.JobQueue <- func() {
 			defer pool.JobDone()
 			if err := checkCRC(fs, dir, f, update); err != nil {
-				log.Fatal(err)
+				log.Fatal(errors.Wrapf(err, "failed checking CRC for %s", f.Name()))
 			}
 		}
 	}
@@ -52,14 +53,14 @@ func check(fs afero.Fs, dir string, update bool) error {
 func checkCRC(fs afero.Fs, dir string, file os.FileInfo, update bool) error {
 	crcHashBytes, err := extractHash(file.Name())
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed extracting hash from file name %s", file.Name())
 	}
 	if crcHashBytes == nil {
 		return nil
 	}
 	crcCalcBytes, err := calculateHash(fs, path.Join(dir, file.Name()))
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed calculating hash for %s", file.Name())
 	}
 
 	result := color.RedString("MISMATCH")
@@ -67,7 +68,7 @@ func checkCRC(fs afero.Fs, dir string, file os.FileInfo, update bool) error {
 		result = color.GreenString("OK")
 	} else if update {
 		if err := renameFileHash(fs, dir, file, crcHashBytes, crcCalcBytes); err != nil {
-			return err
+			return errors.Wrapf(err, "cloud not rename file %s", file.Name())
 		}
 		result = color.YellowString("UPDATED")
 	}
@@ -84,20 +85,21 @@ func extractHash(name string) ([]byte, error) {
 	if len(regexMatch) != 2 {
 		return nil, nil
 	}
-	return hex.DecodeString(regexMatch[1])
+	crc, err := hex.DecodeString(regexMatch[1])
+	return crc, errors.Wrapf(err, "failed decoding hex value %s", regexMatch[1])
 }
 
 // calculateHash reads the content of the given file from the file system and computes a new CRC32-Hash.
 func calculateHash(fs afero.Fs, name string) ([]byte, error) {
 	f, err := fs.Open(name)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "could not open file %s", name)
 	}
 	defer f.Close()
 
 	hasher := crc32.NewIEEE()
 	if _, err := io.Copy(hasher, f); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed calculating hash")
 	}
 	return hasher.Sum(nil), nil
 }

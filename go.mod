@@ -7,6 +7,7 @@ require (
 	github.com/magefile/mage v1.8.0
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
+	github.com/pkg/errors v0.8.1
 	github.com/spf13/afero v1.2.1
 	github.com/stretchr/testify v1.3.0
 	github.com/urfave/cli v1.20.0
