@@ -1,8 +1,10 @@
+.git/
 .idea/
 .vscode/
 vendor/
 
 *.html
+*.adoc
 
 crccheck
-
+Dockerfile
