@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.com/dnaka91/crccheck.svg?branch=master)](https://travis-ci.com/dnaka91/crccheck)
 [![codecov](https://codecov.io/gh/dnaka91/crccheck/branch/master/graph/badge.svg)](https://codecov.io/gh/dnaka91/crccheck)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdnaka91%2Fcrccheck.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdnaka91%2Fcrccheck?ref=badge_shield)
 
 A simple tool to verify CRC32 hashes in filenames against their content.
 
@@ -66,3 +67,6 @@ $ crccheck -h
 ## License
 
 This project is licensed under **Apache 2.0**.
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdnaka91%2Fcrccheck.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdnaka91%2Fcrccheck?ref=badge_large)
